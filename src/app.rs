@@ -1,4 +1,5 @@
 use crate::data::Dependency;
+use crate::error;
 use crate::ui::UiStyles;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::*;
@@ -6,7 +7,6 @@ use ratatui::widgets::{Block, Borders, Cell, Row, Table};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-
 
 #[derive(Debug, Clone)]
 pub struct Metadata {
@@ -28,18 +28,29 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(path: String) -> anyhow::Result<Self> {
-        
+    pub fn new<F: FnMut(&str) -> error::Result<()>>(
+        path: &str,
+        mut loading_screen_callback: F,
+    ) -> (Self, Vec<error::Errors>) {
+        let mut errors = Vec::new();
+        errors.extend(loading_screen_callback("Loading configuration...").err());
         let output = std::process::Command::new("cargo")
             .arg("metadata")
             .arg("--format-version")
             .arg("1")
             .current_dir(path.clone())
-            .output()?;
+            .output().unwrap();
+
 
 
         let crate_info = get_crate_info(path);
-        let metadata: Value = serde_json::from_slice(&output.stdout)?;
+        let metadata: Value = match serde_json::from_slice(&output.stdout) {
+            Ok(metadata) => metadata,
+            Err(err) => {
+                errors.push(error::Errors::ParseMetadata);
+                Value::Null
+            }
+        };
         let mut meta_data = HashMap::new();
 
         if let Some(Value::Array(packages)) = metadata.get("packages") {
@@ -73,9 +84,15 @@ impl App {
             level2_deps: Vec::new(),
             selected_package: vec![crate_info.clone()],
         };
-        res.level1_deps = res.get_deps(crate_info)?;
+        res.level1_deps = match res.get_deps(crate_info) {
+            Ok(level1_deps) => level1_deps,
+            Err(err) => {
+                errors.push(err);
+                Vec::new()
+            }
+        };
         res.select_first_row();
-        Ok(res)
+        (res, errors)
     }
 
     fn select_first_row(&mut self) {
@@ -87,7 +104,7 @@ impl App {
         self.level2_deps = self.get_deps(self.level1_deps[self.selected_index].clone()).unwrap();
     }
 
-    fn get_deps(&mut self, dep: Dependency) -> Result<Vec<Dependency>, std::io::Error> {
+    fn get_deps(&mut self, dep: Dependency) -> Result<Vec<Dependency>, error::Errors> {
         if let Some(dep) = self.deps_map.get(Dependency::get_key(&dep).as_str()) {
             parse_lock_file(&dep.manifest_path)
         } else {
@@ -270,7 +287,7 @@ impl App {
 
 
 
-fn get_crate_info(path: String) -> Dependency {
+fn get_crate_info(path: &str) -> Dependency {
     let cargo_toml_path = PathBuf::from(path).join("Cargo.toml");
     if !cargo_toml_path.exists() {
         panic!("Cargo.toml not found");
@@ -287,7 +304,7 @@ fn get_crate_info(path: String) -> Dependency {
     }
 }
 
-fn parse_lock_file(path: &str) -> Result<Vec<Dependency>, std::io::Error> {
+fn parse_lock_file(path: &str) -> Result<Vec<Dependency>, error::Errors> {
     let cargo_lock_path = path.replace("/Cargo.toml", "/Cargo.lock");
     let path = Path::new(&cargo_lock_path);
     if !path.exists() {

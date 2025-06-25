@@ -8,6 +8,10 @@ pub enum Errors {
     IO(#[from] std::io::Error),
     #[error("Area too small, main window might not display correctly.")]
     SmallArea,
+    #[error("Failed to run cargo metadata.")]
+    RunCargoMetadata,
+    #[error("Failed to parse metadata.")]
+    ParseMetadata,
 }
 
 impl Errors {

@@ -27,7 +27,7 @@ struct Args {
     license: bool,
 }
 
-fn main() -> Result<()> {
+fn main() -> error::Result<()> {
     let args = Args::parse();
     // === Help Notices etc. ===
     if args.license {
@@ -35,18 +35,43 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    terminal::enable_raw_mode()?;
-    
-    let mut stdout = stdout();
-    stdout.execute(terminal::EnterAlternateScreen)?;
-    
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
- 
-    let mut app = App::new(args.path)?;
+    // Initialize hooks & terminal (ratatui boilerplate)
+    init_hooks()?;
+    let mut terminal = init_terminal()?;
+    let (mut app, errors) = App::new(&args.path, |message| draw_loading_screen(&mut terminal, message));
+    let mut current_error: Option<error::Errors> = errors.into_iter().next_back();
 
     loop {
-        terminal.draw(|frame| {
+        terminal.draw(|frame: &mut Frame| {
+            let area = frame.area();
+            let buf = frame.buffer_mut();
+
+            // Make sure area is large enough or show error
+            if area.width < 90 || area.height < 25 {
+                // area too small and no error -> show area error
+                current_error = Some(error::Errors::SmallArea);
+            }
+
+            let app_area = match &current_error {
+                // If there is an error to be displayed
+                Some(e) => {
+                    // Separate the usual app area into a small bottom line for the area and a big area for what can be displayed of the app.
+                    let areas =
+                        Layout::vertical([Constraint::Fill(1), Constraint::Length(1)]).split(area);
+
+                    // Render the error to the bottom.
+                    Widget::render(e.to_ratatui(), areas[1], buf);
+
+                    // Return the rest of the area for the app to render in.
+                    areas[0]
+                }
+                // No error => App can render in the entire area.
+                None => area,
+            };
+
+            Widget::render(ratatui::widgets::Clear, app_area, buf);
+
+            // Draw the actual application
             app.draw(frame);
         })?;
 
@@ -58,8 +83,7 @@ fn main() -> Result<()> {
         }
     }
 
-    terminal::disable_raw_mode()?;
-    std::io::stdout().execute(terminal::LeaveAlternateScreen)?;
+    restore_terminal()?;
     Ok(())
 }
 
