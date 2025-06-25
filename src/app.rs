@@ -1,6 +1,6 @@
 use crate::data::Dependency;
 use crate::ui::UiStyles;
-use crossterm::event::{KeyCode, KeyEvent};
+use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Cell, Row, Table};
 use serde_json::Value;
@@ -73,22 +73,21 @@ impl App {
             level2_deps: Vec::new(),
             selected_package: vec![crate_info.clone()],
         };
-        res.level1_deps = res.get_deps(crate_info);
+        res.level1_deps = res.get_deps(crate_info)?;
         res.select_first_row();
         Ok(res)
     }
 
     fn select_first_row(&mut self) {
         self.selected_index = 0;
-        self.selected_package.push(self.level1_deps[0].clone());
         self.get_level2_dep();
     }
 
     fn get_level2_dep(&mut self) {
-        self.level2_deps = self.get_deps(self.selected_package.last().unwrap().clone());
+        self.level2_deps = self.get_deps(self.level1_deps[self.selected_index].clone()).unwrap();
     }
 
-    fn get_deps(&mut self, dep: Dependency) -> Vec<Dependency> {
+    fn get_deps(&mut self, dep: Dependency) -> Result<Vec<Dependency>, std::io::Error> {
         if let Some(dep) = self.deps_map.get(Dependency::get_key(&dep).as_str()) {
             parse_lock_file(&dep.manifest_path)
         } else {
@@ -100,9 +99,8 @@ impl App {
                 .filter_map(|entry| entry.ok())
                 .find(|entry| entry.file_name().to_string_lossy().starts_with("index"))
                 .ok_or_else(|| anyhow::anyhow!("Could not find crates.io index directory"));
-
             let dep_key = Dependency::get_key(&dep);
-            parse_lock_file(&format!("{}", index_dir.unwrap().path().join(&dep_key).display()))
+            parse_lock_file(index_dir.unwrap().path().join(&dep_key).display().to_string().as_str())
         }
     }
 
@@ -134,10 +132,7 @@ impl App {
         } else if self.selected_index >= self.viewport_start + visible_rows as usize {
             self.viewport_start += 1;
         }
-        let mut title = self.selected_package.last().unwrap().name.to_string();
-        if self.selected_package.len() > 1 {
-            title = self.selected_package[self.selected_package.len() - 2].name.to_string()
-        }
+        
         let level1_table = Table::new(
             self.level1_deps.iter()
                 .enumerate()
@@ -163,7 +158,8 @@ impl App {
             ]
         )
             .header(Row::new(vec!["Index", "Name", "Version"]))
-            .block(Block::default().title(format!("Dependencies of {}", title)).borders(Borders::ALL));
+            .block(Block::default().title(format!("Dependencies of {}", self.selected_package.last().unwrap().name.to_string()))
+                .borders(Borders::ALL));
 
         let level2_table = Table::new(
             self.level2_deps.iter().enumerate().skip(self.viewport_start).take(visible_rows as usize).map(|(index, dep)| {
@@ -180,7 +176,7 @@ impl App {
             ]
         )
             .header(Row::new(vec!["Index", "Name", "Version"]))
-            .block(Block::default().title(format!("Dependencies of {}", self.selected_package.last().unwrap().name)).borders(Borders::ALL));
+            .block(Block::default().title(format!("Dependencies of {}", self.level1_deps[self.selected_index].name)).borders(Borders::ALL));
 
         frame.render_widget(level1_table, table_chunks[0]);
         frame.render_widget(level2_table, table_chunks[1]);
@@ -189,15 +185,18 @@ impl App {
     pub fn update(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Left => {
-                if self.selected_package.len() > 2 {
+                if self.selected_package.len() > 1 {
+                    self.viewport_start = 0;
                     self.selected_package.pop();
                     self.level2_deps = Vec::new();
-                    self.level1_deps = self.get_deps(self.selected_package[self.selected_package.len() - 2].clone());
+                    self.level1_deps = self.get_deps(self.selected_package.last().unwrap().clone()).unwrap();
                     self.select_first_row();
                 }
             },
             KeyCode::Right => {
                 if self.level2_deps.len() > 0 {
+                    self.viewport_start = 0;
+                    self.selected_package.push(self.level1_deps[self.selected_index].clone());
                     self.level1_deps = self.level2_deps.clone();
                     self.level2_deps = Vec::new();
                     self.select_first_row();
@@ -206,16 +205,12 @@ impl App {
             KeyCode::Up => {
                 if self.selected_index > 0 {
                     self.selected_index -= 1;
-                    self.selected_package.pop();
-                    self.selected_package.push(self.level1_deps[self.selected_index].clone());
                     self.get_level2_dep();
                 }
             }
             KeyCode::Down => {
                 if self.selected_index < self.level1_deps.len() - 1 {
                     self.selected_index += 1;
-                    self.selected_package.pop();
-                    self.selected_package.push(self.level1_deps[self.selected_index].clone());
                     self.get_level2_dep();
                 }
             }
@@ -226,31 +221,31 @@ impl App {
     pub fn to_stats_table(&self) -> Table {
         let stats_widths = [
             Constraint::Length(20),
-            Constraint::Min(30),
             Constraint::Length(20),
-            Constraint::Min(30),
+            Constraint::Length(20),
+            Constraint::Min(40),
         ];
         let styles = UiStyles::default();
 
-        let mut paths: Vec<String> = self.selected_package.iter().map(|dep| dep.name.clone()).collect();
-        if paths.len() > 1 {
-            paths.pop();
-        }
+        let paths: Vec<String> = self.selected_package.iter().map(|dep| dep.name.clone()).collect();
         let joined_path = paths.join(" > ");
-        let current_crate = self.get_current_crate();
         let mut description = String::from("");
         let mut license = String::from("");
-        if let Some(meta_data) = self.deps_map.get(Dependency::get_key(current_crate).as_str()) {
-            description = meta_data.description.clone();
-            license = meta_data.license.clone();
+        
+        if let Some(current_crate) = self.selected_package.last() {
+            if let Some(meta_data) = self.deps_map.get(Dependency::get_key(current_crate).as_str()) {
+                description = meta_data.description.clone();
+                license = meta_data.license.clone();
+            }    
         }
+        
         // Stats Area
         let stats_rows = [
             Row::new(vec![
                 Cell::from("Crate:").style(styles.text_style),
-                Cell::from(format!("{:5}", paths.last().unwrap())).style(styles.text_style),
-                Cell::from("Dependencies count:").style(styles.text_style),
-                Cell::from(format!("{:5}", self.level1_deps.len())).style(styles.text_style),
+                Cell::from(format!("{:5}", self.selected_package.last().unwrap().name)).style(styles.text_style),
+                Cell::from("Version:").style(styles.text_style),
+                Cell::from(format!("v{:5}", self.selected_package.last().unwrap().version)).style(styles.text_style),
             ]),
             Row::new(vec![
                 Cell::from("License:").style(styles.text_style),
@@ -259,21 +254,16 @@ impl App {
                 Cell::from(format!("{:5}", description)).style(styles.text_style),
             ]),
             Row::new(vec![
+                Cell::from("Dependencies count:").style(styles.text_style),
+                Cell::from(format!("{:5}", self.level1_deps.len())).style(styles.text_style),
                 Cell::from("Path:").style(styles.text_style),
                 Cell::from(joined_path).style(styles.text_style),
             ]),
+
         ];
 
         Table::new(stats_rows, stats_widths).column_spacing(1)
             .block(Block::default().title("Statistics").borders(Borders::ALL))
-    }
-
-    fn get_current_crate(&self) -> &Dependency {
-        if self.selected_package.len() > 1 {
-            &self.selected_package[self.selected_package.len() - 2]
-        } else { 
-            &self.selected_package.last().unwrap()
-        }
     }
 }
 
@@ -282,6 +272,9 @@ impl App {
 
 fn get_crate_info(path: String) -> Dependency {
     let cargo_toml_path = PathBuf::from(path).join("Cargo.toml");
+    if !cargo_toml_path.exists() {
+        panic!("Cargo.toml not found");
+    }
     let content = std::fs::read_to_string(&cargo_toml_path);
     let content = content.unwrap();
     let name = content.split('\n').find(|line| line.starts_with("name = ")).unwrap();
@@ -294,12 +287,13 @@ fn get_crate_info(path: String) -> Dependency {
     }
 }
 
-fn parse_lock_file(path: &str) -> Vec<Dependency> {
-    let cargo_lock_path = path.replace("Cargo.toml", "Cargo.lock");
-    if !PathBuf::from(&cargo_lock_path).exists() {
-        return Vec::new();
+fn parse_lock_file(path: &str) -> Result<Vec<Dependency>, std::io::Error> {
+    let cargo_lock_path = path.replace("/Cargo.toml", "/Cargo.lock");
+    let path = Path::new(&cargo_lock_path);
+    if !path.exists() {
+        return Ok(Vec::new());
     }
-    let content = std::fs::read_to_string(&cargo_lock_path).unwrap();
+    let content = std::fs::read_to_string(&path)?;
     let mut crates = Vec::new();
     let mut name = String::new();
 
@@ -325,5 +319,5 @@ fn parse_lock_file(path: &str) -> Vec<Dependency> {
         }
     }
 
-    crates
+    Ok(crates)
 }
