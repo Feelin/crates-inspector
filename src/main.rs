@@ -2,20 +2,20 @@ mod data;
 mod app;
 mod ui;
 mod error;
-use anyhow::Result;
 
+use clap::Parser;
+use log::error;
 use ratatui::crossterm::{event::{self, Event, KeyCode}, terminal, ExecutableCommand};
 use ratatui::prelude::*;
 use ratatui::{
     prelude::CrosstermBackend,
     Terminal,
 };
-use std::io::stdout;
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::panic;
 
 use crate::app::App;
-use clap::Parser;
-
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -28,6 +28,29 @@ struct Args {
 }
 
 fn main() -> error::Result<()> {
+    // Initialize logger
+    let log_file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(true)
+        .open("cargo-dep-viewer.log")
+        .expect("Failed to create log file");
+
+    env_logger::Builder::new()
+        .format(|buf, record| {
+            writeln!(
+                buf,
+                "[{}] [{}] - {}",
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+                record.level(),
+                record.args()
+            )
+        })
+        .write_style(env_logger::WriteStyle::Always)
+        .target(env_logger::Target::Pipe(Box::new(log_file)))
+        .filter(None, log::LevelFilter::Error)
+        .init();
+
     let args = Args::parse();
     // === Help Notices etc. ===
     if args.license {
@@ -72,7 +95,7 @@ fn main() -> error::Result<()> {
             Widget::render(ratatui::widgets::Clear, app_area, buf);
 
             // Draw the actual application
-            app.draw(frame);
+            app.draw(app_area, buf);
         })?;
 
         if let Event::Key(key) = event::read()? {
@@ -82,7 +105,10 @@ fn main() -> error::Result<()> {
             }
         }
     }
-
+    
+    if let Some(error) = &current_error {
+        error!("Error initializing app: {}", error);
+    }
     restore_terminal()?;
     Ok(())
 }

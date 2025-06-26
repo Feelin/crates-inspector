@@ -16,6 +16,8 @@ pub struct UiStyles {
     pub selected_style: Style,
     /// For text in an input area.
     pub input_style: Style,
+    /// For link text.
+    pub link_style: Style,
 }
 
 impl Default for UiStyles {
@@ -31,6 +33,7 @@ impl Default for UiStyles {
                 .fg(ratatui::style::Color::Cyan)
                 .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
             text_style: Style::new().fg(Color::White),
+            link_style: Style::new().fg(Color::Cyan),
             selected_style: Style::new()
                 .bg(ratatui::style::Color::Blue)
                 .add_modifier(Modifier::BOLD),
