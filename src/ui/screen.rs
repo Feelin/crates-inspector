@@ -1,4 +1,4 @@
-use crate::data::DataState;
+use crate::data::{DataState};
 use crate::ui::UiStyles;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Constraint, Layout, Rect};
@@ -6,15 +6,26 @@ use ratatui::prelude::{Color, Line, Span, Style, Text, Widget};
 use ratatui::widgets::{Block, Borders, Cell, Paragraph, Row, Table};
 use tui_textarea::TextArea;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum DisplayMode {
+    /// Selecting a note from the list.
+    #[default]
+    View,
+    Filter,
+    Help,
+}
+
 pub struct Screen {
-    filter_area: TextArea<'static>,
+    pub filter_area: TextArea<'static>,
     styles: UiStyles,
+    pub mode: DisplayMode,
     pub viewport_start: usize,
 }
 
 impl Screen {
     pub fn default() -> Screen {
         let mut res = Screen {
+            mode: DisplayMode::View,
             viewport_start: 0,
             filter_area: TextArea::default(),
             styles: UiStyles::default(),
@@ -56,6 +67,7 @@ impl Screen {
         let level1_table = Table::new(
             state.level1_deps
                 .iter()
+                .filter(|x| state.filter.is_empty() || x.name.contains(state.filter.as_str()))
                 .enumerate()
                 .skip(self.viewport_start)
                 .take(visible_rows as usize)
@@ -162,6 +174,14 @@ impl Screen {
                 .title_top(instructions)
                 .title_bottom(instructions_bot),
         );
+    }
+
+    pub fn filter(&mut self, state: &mut DataState) {
+        let default = String::from("");
+        state.filter = self.filter_area
+            .lines()
+            .first()
+            .unwrap_or(&default).to_string()
     }
 
     pub fn to_stats_table(&self, state: &DataState) -> Table {

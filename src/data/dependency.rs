@@ -22,6 +22,7 @@ pub struct DataState {
     pub level1_deps: Vec<Dependency>,
     pub level2_deps: Vec<Dependency>,
     pub selected_package: Vec<Dependency>,
+    pub filter: String,
 }
 
 impl DataState {
@@ -32,10 +33,11 @@ impl DataState {
             level1_deps: Vec::new(),
             level2_deps: Vec::new(),
             selected_package: Vec::new(),
+            filter: String::new()
         }
     }
 
-   
+
 
     pub fn get_level2_dep(&mut self) {
         self.level2_deps = self
