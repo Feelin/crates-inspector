@@ -144,7 +144,7 @@ impl App {
                             self.screen.viewport_start = 0;
                             self.state
                                 .selected_package
-                                .push(self.state.level1_deps[self.state.selected_index].clone());
+                                .push(self.state.get_filter_deps()[self.state.selected_index].clone());
                             self.state.level1_deps = self.state.level2_deps.clone();
                             self.state.level2_deps = Vec::new();
                             self.select_first_row();
@@ -157,7 +157,7 @@ impl App {
                         }
                     }
                     KeyCode::Down => {
-                        if self.state.selected_index < self.state.level1_deps.len() - 1 {
+                        if self.state.selected_index < self.state.get_filter_deps().len() - 1 {
                             self.state.selected_index += 1;
                             self.state.get_level2_dep();
                         }

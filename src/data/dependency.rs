@@ -26,6 +26,13 @@ pub struct DataState {
 }
 
 impl DataState {
+    pub fn get_filter_deps(&self) -> Vec<Dependency> {
+        self.level1_deps.iter()
+            .filter(|x| self.filter.is_empty() || x.name.contains(self.filter.as_str()))
+            .cloned()
+            .collect()
+    }
+
     pub fn default() -> DataState {
         DataState {
             selected_index: 0,
@@ -41,7 +48,7 @@ impl DataState {
 
     pub fn get_level2_dep(&mut self) {
         self.level2_deps = self
-            .get_deps(self.level1_deps[self.selected_index].clone())
+            .get_deps(self.get_filter_deps()[self.selected_index].clone())
             .unwrap_or_else(|_| Vec::new());
     }
 

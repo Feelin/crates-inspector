@@ -51,10 +51,10 @@ impl Screen {
         let [sub_description_area, filter_area] =
             Layout::horizontal([Constraint::Percentage(75), Constraint::Percentage(25)])
                 .areas(filter_area);
-        let data = state.get_metadata(&state.level1_deps[state.selected_index]);
+        let data = state.get_metadata(&state.get_filter_deps()[state.selected_index]);
         let sub_description_text = Paragraph::new(data.description)
             .style(Style::default().fg(Color::Yellow))
-            .block(Block::default().borders(Borders::ALL).title(format!("Description of {}", state.level1_deps[state.selected_index].name)));
+            .block(Block::default().borders(Borders::ALL).title(format!("Description of {}", state.get_filter_deps()[state.selected_index].name)));
         Widget::render(sub_description_text, sub_description_area, buf);
         Widget::render(&self.filter_area, filter_area, buf);
         let visible_rows = table_area.height.saturating_sub(3);
@@ -65,9 +65,8 @@ impl Screen {
         }
 
         let level1_table = Table::new(
-            state.level1_deps
+            state.get_filter_deps()
                 .iter()
-                .filter(|x| state.filter.is_empty() || x.name.contains(state.filter.as_str()))
                 .enumerate()
                 .skip(self.viewport_start)
                 .take(visible_rows as usize)
@@ -134,7 +133,7 @@ impl Screen {
                 Block::default()
                     .title(format!(
                         "Dependencies of {}",
-                        state.level1_deps[state.selected_index].name
+                        state.get_filter_deps()[state.selected_index].name
                     ))
                     .borders(Borders::ALL),
             );
@@ -218,7 +217,7 @@ impl Screen {
                 ]),
                 Row::new(vec![
                     Cell::from("Dependencies count:").style(self.styles.text_style),
-                    Cell::from(format!("{:5}", state.level1_deps.len())).style(self.styles.text_style),
+                    Cell::from(format!("{:5}", state.get_filter_deps().len())).style(self.styles.text_style),
                     Cell::from("Path:").style(self.styles.text_style),
                     Cell::from(joined_path).style(self.styles.text_style),
                 ]),
