@@ -19,24 +19,11 @@ pub enum DisplayMode {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-enum Sorting {
+pub enum OrderBy {
     #[default]
-    ASC,
-    DESC
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-enum OrderBy {
-    #[default]
-    Default,
     Name,
+    Version,
     Size,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub struct Order {
-    order_by: OrderBy,
-    sort: Sorting
 }
 
 
@@ -45,7 +32,6 @@ pub struct Screen {
     pub filter_area: TextArea<'static>,
     styles: UiStyles,
     pub mode: DisplayMode,
-    pub order: Order,
     pub viewport_start: usize,
 }
 
@@ -53,7 +39,6 @@ impl Screen {
     pub fn default() -> Screen {
         let mut res = Screen {
             mode: DisplayMode::View,
-            order: Order::default(),
             viewport_start: 0,
             filter_area: TextArea::default(),
             styles: UiStyles::default(),
@@ -191,7 +176,7 @@ impl Screen {
                         self.styles.text_style
                     };
                     
-                    let text_style = if metadata.documentation.is_empty() {
+                    let text_style = if !metadata.documentation.is_empty() {
                         self.styles.link_style
                     } else {
                         self.styles.text_style
@@ -201,16 +186,18 @@ impl Screen {
                         Cell::from((index + 1).to_string()).style(row_style),
                         Cell::from(Text::from(metadata.name.clone()).style(text_style)).style(row_style),
                         Cell::from(metadata.version.clone()).style(row_style),
+                        Cell::from(get_size(metadata.size)).style(row_style),
                     ])
                 })
                 .collect::<Vec<_>>(),
             vec![
-                Constraint::Percentage(20),
-                Constraint::Percentage(50),
+                Constraint::Percentage(15),
+                Constraint::Percentage(30),
+                Constraint::Percentage(25),
                 Constraint::Percentage(30),
             ],
         )
-            .header(Row::new(vec!["Index", "Name", "Version"]))
+            .header(Row::new(vec!["Index", "Name", "Version", "Size"]))
             .block(
                 Block::default()
                     .title(format!(
@@ -243,16 +230,18 @@ impl Screen {
                         Cell::from((index + 1).to_string()),
                         Cell::from(dep.name.clone()),
                         Cell::from(dep.version.clone()),
+                        Cell::from(get_size(dep.size)),
                     ])
                 })
                 .collect::<Vec<_>>(),
             vec![
-                Constraint::Percentage(20),
-                Constraint::Percentage(50),
+                Constraint::Percentage(15),
+                Constraint::Percentage(30),
+                Constraint::Percentage(25),
                 Constraint::Percentage(30),
             ],
         )
-            .header(Row::new(vec!["Index", "Name", "Version"]))
+            .header(Row::new(vec!["Index", "Name", "Version", "Size"]))
             .block(
                 Block::default()
                     .title(format!(
@@ -392,4 +381,22 @@ impl Screen {
             .column_spacing(1)
             .block(Block::default().title("Statistics").borders(Borders::ALL))
     }
+}
+
+fn get_size(size: u64) -> String {
+    let mut size = size;
+    let mut unit = "B";
+    if size >= 1024 {
+        size /= 1024;
+        unit = "KB";
+    }
+    if size >= 1024 {
+        size /= 1024;
+        unit = "MB";
+    }
+    if size >= 1024 {
+        size /= 1024;
+        unit = "GB";
+    }
+    format!("{} {}", size, unit)
 }

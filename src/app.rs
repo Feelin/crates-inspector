@@ -1,6 +1,6 @@
 use crate::data::{DataState, Metadata};
 use crate::error;
-use crate::ui::{DisplayMode, Screen};
+use crate::ui::{DisplayMode, OrderBy, Screen};
 
 use open;
 use ratatui::crossterm::event::{KeyCode, KeyEvent};
@@ -49,7 +49,7 @@ impl App {
             }
         };
         let mut deps_map = HashMap::new();
-        
+
         if let Some(Value::Array(nodes)) = metadata
             .get("resolve")
             .and_then(|resolve| resolve.get("nodes")) {
@@ -61,14 +61,13 @@ impl App {
                             if deps_map.get(id.as_str()).is_some() {
                                 continue;
                             }
-
+                            
                             deps_map.insert(
                                 id.clone(),
                                 Metadata {
-                                    id: id.clone(),
+                                    size: get_size_by_manifest_path(get_string_from(package, "manifest_path")).unwrap_or(0),
                                     name: trim_value(name),
                                     version: trim_value(version),
-                                    manifest_path: get_string_from(package, "manifest_path"),
                                     license: get_string_from(package, "license"),
                                     documentation: get_string_from(package, "documentation"),
                                     description: get_string_from(package, "description"),
@@ -82,10 +81,10 @@ impl App {
                         }
                     }
                 }
-            }    
+            }
         }
 
-        
+
 
         // get root from workspace_default_members
         let root_id = metadata
@@ -210,7 +209,19 @@ impl App {
             }
             DisplayMode::Sort => match key.code {
                 KeyCode::Char('n' | 'N') => {
-                    // self.set_mode_and_maybe_sort(data::SortingMode::Name, true);
+                    self.state.order_by(OrderBy::Name);
+                    self.screen.mode = DisplayMode::View;
+                }
+                KeyCode::Char('s' | 'S') => {
+                    self.state.order_by(OrderBy::Size);
+                    self.screen.mode = DisplayMode::View;
+                }
+                KeyCode::Char('v' | 'V') => {
+                    self.state.order_by(OrderBy::Version);
+                    self.screen.mode = DisplayMode::View;
+                }
+                KeyCode::Char('r' | 'R') => {
+                    self.state.sorting(!self.state.sorting_asc);
                     self.screen.mode = DisplayMode::View;
                 }
                 KeyCode::Esc => {
@@ -249,4 +260,14 @@ fn get_string_from(content: &Value, key: &str) -> String {
 fn trim_value(value: &Value) -> String {
     value.to_string().trim()
         .trim_matches(|c: char| c.is_whitespace() || c == '"').to_string()
+}
+
+pub fn get_size_by_manifest_path(path: String) -> Result<u64, std::io::Error> {
+    // "/Users/yulin.fyl/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rust-argon2-0.8.3/Cargo.toml"
+    let crate_path = path
+        .replace("/Cargo.toml", ".crate")
+        .replace("/src/", "/cache/");
+    
+    let metadata = std::fs::metadata(&crate_path)?;
+    Ok(metadata.len())
 }
