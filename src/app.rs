@@ -1,4 +1,4 @@
-use crate::data::{DataState, Dependency};
+use crate::data::{DataState, Dependency, Metadata};
 use crate::error;
 use crate::ui::{DisplayMode, Screen};
 
@@ -8,15 +8,6 @@ use ratatui::prelude::*;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::path::PathBuf;
-
-#[derive(Debug, Clone)]
-pub struct Metadata {
-    pub manifest_path: String,
-    pub license: String,
-    // size: u64,
-    pub documentation: String,
-    pub description: String,
-}
 
 pub struct App {
     state: DataState,
@@ -139,7 +130,7 @@ impl App {
                             self.select_first_row();
                         }
                     }
-                    KeyCode::Right => {
+                    KeyCode::Right | KeyCode::Char('l' | 'L') => {
                         if self.state.level2_deps.len() > 0 {
                             self.screen.viewport_start = 0;
                             self.state
@@ -150,13 +141,13 @@ impl App {
                             self.select_first_row();
                         }
                     }
-                    KeyCode::Up => {
+                    KeyCode::Up | KeyCode::Char('K' | 'k') => {
                         if self.state.selected_index > 0 {
                             self.state.selected_index -= 1;
                             self.state.get_level2_dep();
                         }
                     }
-                    KeyCode::Down => {
+                    KeyCode::Down | KeyCode::Char('J' | 'j') => {
                         if self.state.selected_index < self.state.get_filter_deps().len() - 1 {
                             self.state.selected_index += 1;
                             self.state.get_level2_dep();
@@ -185,6 +176,9 @@ impl App {
                     KeyCode::Char('h' | 'H') => {
                         self.screen.mode = DisplayMode::Help;
                     }
+                    KeyCode::Char('s' | 'S') => {
+                        self.screen.mode = DisplayMode::Sort;
+                    }
                     _ => {}
                 }
             }
@@ -206,11 +200,21 @@ impl App {
             }
             DisplayMode::Help => {
                 match key.code {
-                    KeyCode::Esc => {
+                    KeyCode::Esc | KeyCode::Char('c' | 'C') => {
                         self.screen.mode = DisplayMode::View;
                     }
                     _ => {}
                 };
+            }
+            DisplayMode::Sort => match key.code {
+                KeyCode::Char('n' | 'N') => {
+                    // self.set_mode_and_maybe_sort(data::SortingMode::Name, true);
+                    self.screen.mode = DisplayMode::View;
+                }
+                KeyCode::Esc => {
+                    self.screen.mode = DisplayMode::View;
+                }
+                _ => {}
             }
         };
     }

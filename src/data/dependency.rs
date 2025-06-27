@@ -1,4 +1,3 @@
-use crate::app::Metadata;
 use crate::error;
 use std::collections::HashMap;
 use std::path::Path;
@@ -13,6 +12,16 @@ impl Dependency {
     pub fn get_key(dep: &Dependency) -> String {
         format!("{}-{}", dep.name, dep.version).replace('"', "")
     }
+}
+
+
+#[derive(Debug, Clone)]
+pub struct Metadata {
+    pub manifest_path: String,
+    pub license: String,
+    // size: u64,
+    pub documentation: String,
+    pub description: String,
 }
 
 
