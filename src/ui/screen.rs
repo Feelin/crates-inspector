@@ -145,7 +145,7 @@ impl Screen {
         let [sub_description_area, filter_area] =
             Layout::horizontal([Constraint::Percentage(65), Constraint::Percentage(35)])
                 .areas(filter_area);
-        let data = state.get_metadata(&state.get_filter_deps()[state.selected_index]);
+        let data = state.get_filter_deps()[state.selected_index].clone();
         let sub_description_text = Paragraph::new(data.description)
             .style(Style::default().fg(Color::Yellow))
             .block(Block::default().borders(Borders::ALL).title(format!("Description of {}", state.get_filter_deps()[state.selected_index].name)));
@@ -184,13 +184,13 @@ impl Screen {
                 .enumerate()
                 .skip(self.viewport_start)
                 .take(visible_rows as usize)
-                .map(|(index, dep)| {
+                .map(|(index, metadata)| {
                     let row_style = if index == state.selected_index {
                         self.styles.selected_style
                     } else {
                         self.styles.text_style
                     };
-                    let metadata = state.get_metadata(dep);
+                    
                     let text_style = if metadata.documentation.is_empty() {
                         self.styles.link_style
                     } else {
@@ -199,8 +199,8 @@ impl Screen {
 
                     Row::new(vec![
                         Cell::from((index + 1).to_string()).style(row_style),
-                        Cell::from(Text::from(dep.name.clone()).style(text_style)).style(row_style),
-                        Cell::from(dep.version.clone()).style(row_style),
+                        Cell::from(Text::from(metadata.name.clone()).style(text_style)).style(row_style),
+                        Cell::from(metadata.version.clone()).style(row_style),
                     ])
                 })
                 .collect::<Vec<_>>(),
@@ -361,7 +361,6 @@ impl Screen {
         let joined_path = paths.join(" > ");
 
         if let Some(current_crate) = state.selected_package.last() {
-            let meta_data = state.get_metadata(current_crate);
 
             // Stats Area
             let stats_rows = [
@@ -373,9 +372,9 @@ impl Screen {
                 ]),
                 Row::new(vec![
                     Cell::from("License:").style(self.styles.text_style),
-                    Cell::from(format!("{:5}", meta_data.license)).style(self.styles.text_style),
+                    Cell::from(format!("{:5}", current_crate.license)).style(self.styles.text_style),
                     Cell::from("Description:").style(self.styles.text_style),
-                    Cell::from(format!("{:5}", meta_data.description)).style(self.styles.text_style),
+                    Cell::from(format!("{:5}", current_crate.description)).style(self.styles.text_style),
                 ]),
                 Row::new(vec![
                     Cell::from("Dependencies count:").style(self.styles.text_style),

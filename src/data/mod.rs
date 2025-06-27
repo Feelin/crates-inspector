@@ -1,5 +1,4 @@
-mod dependency;
+mod state;
 
-pub use dependency::Dependency;
-pub use dependency::DataState;
-pub use dependency::Metadata;
+pub use state::DataState;
+pub use state::Metadata;

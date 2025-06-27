@@ -1,4 +1,4 @@
-use crate::data::{DataState, Dependency, Metadata};
+use crate::data::{DataState, Metadata};
 use crate::error;
 use crate::ui::{DisplayMode, Screen};
 
@@ -7,7 +7,6 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::*;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::PathBuf;
 
 pub struct App {
     state: DataState,
@@ -49,56 +48,64 @@ impl App {
                 Value::Null
             }
         };
-        let mut meta_data = HashMap::new();
+        let mut deps_map = HashMap::new();
+        
+        if let Some(Value::Array(nodes)) = metadata
+            .get("resolve")
+            .and_then(|resolve| resolve.get("nodes")) {
+            if let Some(Value::Array(packages)) = metadata.get("packages") {
+                for package in packages {
+                    if let Some(name) = package.get("name") {
+                        if let Some(version) = package.get("version") {
+                            let id = get_string_from(package, "id");
+                            if deps_map.get(id.as_str()).is_some() {
+                                continue;
+                            }
 
-        if let Some(Value::Array(packages)) = metadata.get("packages") {
-            for package in packages {
-                if let Some(name) = package.get("name") {
-                    if let Some(version) = package.get("version") {
-                        let key = Dependency::get_key(&Dependency {
-                            name: name.to_string(),
-                            version: version.to_string(),
-                        });
-                        if meta_data.get(key.as_str()).is_some() {
-                            continue;
+                            deps_map.insert(
+                                id.clone(),
+                                Metadata {
+                                    id: id.clone(),
+                                    name: trim_value(name),
+                                    version: trim_value(version),
+                                    manifest_path: get_string_from(package, "manifest_path"),
+                                    license: get_string_from(package, "license"),
+                                    documentation: get_string_from(package, "documentation"),
+                                    description: get_string_from(package, "description"),
+                                    dependencies: nodes
+                                        .iter()
+                                        .find(|node| get_string_from(node, "id") == id)
+                                        .map(|node| get_vec_from(node, "dependencies"))
+                                        .unwrap_or_default(),
+                                },
+                            );
                         }
-                        meta_data.insert(
-                            key,
-                            Metadata {
-                                manifest_path: get_metadata(package, "manifest_path"),
-                                license: get_metadata(package, "license"),
-                                documentation: get_metadata(package, "documentation"),
-                                description: get_metadata(package, "description"),
-                            },
-                        );
                     }
                 }
-            }
+            }    
         }
 
-        match get_crate_info(path) {
-            Ok(crate_info) => {
-                let mut res = Self {
-                    state: DataState::default(),
-                    screen: Screen::default(),
-                };
-                res.state.deps_map = meta_data;
-                res.state.selected_package = vec![crate_info.clone()];
-                res.state.level1_deps = match res.state.get_deps(crate_info) {
-                    Ok(level1_deps) => level1_deps,
-                    Err(err) => {
-                        errors.push(err);
-                        Vec::new()
-                    }
-                };
-                res.select_first_row();
-                (res, errors)
-            }
-            Err(e) => {
-                errors.push(e);
-                (Self::default(), errors)
-            }
-        }
+        
+
+        // get root from workspace_default_members
+        let root_id = metadata
+            .get("workspace_default_members")
+            .and_then(|members| members.get(0))
+            .and_then(|member| member.as_str())
+            .unwrap_or_default()
+            .to_string();
+        
+        let mut res = Self {
+            state: DataState::default(),
+            screen: Screen::default(),
+        };
+        res.state.deps_map = deps_map;
+        let root = res.state.get_metadata(root_id);
+        res.state.selected_package = vec![root.clone()];
+        error!("root: {}", root.dependencies.join(","));
+        res.state.level1_deps = res.state.get_deps(&root);
+        res.select_first_row();
+        (res, errors)
     }
 
     fn select_first_row(&mut self) {
@@ -120,10 +127,7 @@ impl App {
                             self.state.selected_package.pop();
                             self.state.level2_deps = Vec::new();
                             if let Some(last_dep) = self.state.selected_package.last() {
-                                match self.state.get_deps(last_dep.clone()) {
-                                    Ok(deps) => self.state.level1_deps = deps,
-                                    Err(_) => self.state.level1_deps = Vec::new(),
-                                }
+                                self.state.level1_deps = self.state.get_deps(&last_dep.clone())
                             } else {
                                 self.state.level1_deps = Vec::new();
                             }
@@ -133,9 +137,9 @@ impl App {
                     KeyCode::Right | KeyCode::Char('l' | 'L') => {
                         if self.state.level2_deps.len() > 0 {
                             self.screen.viewport_start = 0;
-                            self.state
-                                .selected_package
-                                .push(self.state.get_filter_deps()[self.state.selected_index].clone());
+                            self.state.selected_package.push(
+                                self.state.get_filter_deps()[self.state.selected_index].clone(),
+                            );
                             self.state.level1_deps = self.state.level2_deps.clone();
                             self.state.level2_deps = Vec::new();
                             self.select_first_row();
@@ -154,16 +158,14 @@ impl App {
                         }
                     }
                     KeyCode::Enter => {
-                        if let Some(dep) = self.state.level2_deps.get(self.state.selected_index) {
-                            let metadata = self.state.get_metadata(dep);
+                        if let Some(metadata) =
+                            self.state.level1_deps.get(self.state.selected_index)
+                        {
                             if !metadata.documentation.is_empty() {
                                 // Open documentation URL
                                 if let Err(e) = open::that(&metadata.documentation) {
                                     eprintln!("Failed to open documentation: {}", e);
                                 }
-                            } else if let Ok(deps) = self.state.get_deps(dep.clone()) {
-                                self.state.level2_deps = deps;
-                                self.state.selected_index = 0;
                             }
                         }
                     }
@@ -215,38 +217,36 @@ impl App {
                     self.screen.mode = DisplayMode::View;
                 }
                 _ => {}
-            }
+            },
         };
     }
 }
 
-fn get_crate_info(path: &str) -> error::Result<Dependency> {
-    let cargo_toml_path = PathBuf::from(path).join("Cargo.toml");
-    if !cargo_toml_path.exists() {
-        panic!("Cargo.toml not found");
-    }
-    let content = std::fs::read_to_string(&cargo_toml_path);
-    let content = content?;
-    let name = content
-        .split('\n')
-        .find(|line| line.starts_with("name = "))
-        .unwrap_or_default();
-    let name = name.split('"').nth(1).unwrap_or_default();
-    let version = content
-        .split('\n')
-        .find(|line| line.starts_with("version = "))
-        .unwrap_or_default();
-    let version = version.split('"').nth(1).unwrap_or_default();
-    Ok(Dependency {
-        name: name.to_string(),
-        version: version.to_string(),
-    })
+fn get_vec_from(content: &Value, key: &str) -> Vec<String> {
+    content
+        .get(key)
+        .and_then(|v| match v {
+            Value::Array(arr) => {
+                let strings: Vec<String> = arr
+                    .iter()
+                    .filter_map(|item| item.as_str().map(|s| s.to_string()))
+                    .collect();
+                Some(strings)
+            }
+            _ => None,
+        })
+        .unwrap_or(Vec::new())
 }
 
-fn get_metadata(content: &Value, key: &str) -> String {
+fn get_string_from(content: &Value, key: &str) -> String {
     content
         .get(key)
         .map(|v| v.as_str().unwrap_or_default())
         .unwrap_or_default()
         .to_string()
+}
+
+fn trim_value(value: &Value) -> String {
+    value.to_string().trim()
+        .trim_matches(|c: char| c.is_whitespace() || c == '"').to_string()
 }

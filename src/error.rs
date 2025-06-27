@@ -12,8 +12,6 @@ pub enum Errors {
     RunCargoMetadata,
     #[error("Failed to parse metadata.")]
     ParseMetadata,
-    #[error("Could not find crates.io index directory")]
-    CratesIoIndexDirectoryNotFound,
 }
 
 impl Errors {
