@@ -15,8 +15,8 @@ use std::panic;
 
 use crate::app::App;
 
-use std::fs::OpenOptions;
-use std::io::Write;
+// use std::fs::OpenOptions;
+// use std::io::Write;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -29,12 +29,12 @@ struct Args {
 }
 
 fn main() -> error::Result<()> {
-    // Initialize logger
+   /* // Initialize logger
     let log_file = OpenOptions::new()
         .create(true)
         .write(true)
         .append(true)
-        .open("cargo-dep-viewer.log")
+        .open("error.log")
         .expect("Failed to create log file");
 
     env_logger::Builder::new()
@@ -50,7 +50,7 @@ fn main() -> error::Result<()> {
         .write_style(env_logger::WriteStyle::Always)
         .target(env_logger::Target::Pipe(Box::new(log_file)))
         .filter(None, log::LevelFilter::Error)
-        .init();
+        .init();*/
     
     let args = Args::parse();
     // === Help Notices etc. ===
