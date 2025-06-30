@@ -18,6 +18,8 @@ pub struct UiStyles {
     pub input_style: Style,
     /// For link text.
     pub link_style: Style,
+    pub bar_chart_style: Style,
+    pub unselected_style: Style,
 }
 
 impl Default for UiStyles {
@@ -35,9 +37,11 @@ impl Default for UiStyles {
             text_style: Style::new().fg(Color::White),
             link_style: Style::new().fg(Color::Cyan),
             selected_style: Style::new()
-                .bg(ratatui::style::Color::Blue)
+                .bg(ratatui::style::Color::LightBlue)
                 .add_modifier(Modifier::BOLD),
+            unselected_style: Style::default(),
             input_style: Style::new().add_modifier(Modifier::ITALIC),
+            bar_chart_style: Style::new().fg(Color::Gray),
         }
     }
 }

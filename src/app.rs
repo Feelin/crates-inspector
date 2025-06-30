@@ -62,15 +62,17 @@ impl App {
                                 continue;
                             }
                             
+                            let manifest_path = get_string_from(package, "manifest_path");
                             deps_map.insert(
                                 id.clone(),
                                 Metadata {
-                                    size: get_size_by_manifest_path(get_string_from(package, "manifest_path")).unwrap_or(0),
+                                    size: get_size_by_manifest_path(manifest_path.clone()).unwrap_or(0),
                                     name: trim_value(name),
                                     version: trim_value(version),
                                     license: get_string_from(package, "license"),
                                     documentation: get_string_from(package, "documentation"),
                                     description: get_string_from(package, "description"),
+                                    manifest_path,
                                     dependencies: nodes
                                         .iter()
                                         .find(|node| get_string_from(node, "id") == id)
@@ -120,6 +122,22 @@ impl App {
         match self.screen.mode {
             DisplayMode::View => {
                 match key.code {
+                    KeyCode::Char('a' | 'A') => {
+                        if self.state.is_direct {
+                            self.state.is_direct = false; 
+                            self.state.switch_mode();
+                        }
+                    }
+                    KeyCode::Char('d' | 'D') => {
+                        if !self.state.is_direct {
+                            self.state.is_direct = true;    
+                            self.state.switch_mode();
+                        }
+                    }
+                    KeyCode::Char('c' | 'C') => {
+                        self.screen.clear_filter(&mut self.state);
+                        self.screen.mode = DisplayMode::View;
+                    }
                     KeyCode::Left => {
                         if self.state.selected_package.len() > 1 {
                             self.screen.viewport_start = 0;
@@ -199,6 +217,7 @@ impl App {
                     }
                 };
             }
+           
             DisplayMode::Help => {
                 match key.code {
                     KeyCode::Esc | KeyCode::Char('c' | 'C') => {

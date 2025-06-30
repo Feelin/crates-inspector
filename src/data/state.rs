@@ -1,6 +1,8 @@
 use std::cmp::Ordering;
 use crate::ui::OrderBy;
 use std::collections::HashMap;
+use std::path::Path;
+use crate::error;
 
 #[derive(Debug, Clone, Default)]
 pub struct Metadata {
@@ -11,6 +13,7 @@ pub struct Metadata {
     pub documentation: String,
     pub description: String,
     pub dependencies: Vec<String>,
+    pub manifest_path: String
     // pub depth: u8
 }
 
@@ -21,15 +24,16 @@ pub struct DataState {
     pub level1_deps: Vec<Metadata>,
     pub level2_deps: Vec<Metadata>,
     pub selected_package: Vec<Metadata>,
-    pub filter: String,
+    pub filter_input: String,
     pub sorting_asc: bool,
+    pub is_direct: bool,
     order: OrderBy
 }
 
 impl DataState {
     pub fn get_filter_deps(&self) -> Vec<Metadata> {
         self.level1_deps.iter()
-            .filter(|x| self.filter.is_empty() || x.name.contains(self.filter.as_str()))
+            .filter(|x| self.filter_input.is_empty() || x.name.contains(self.filter_input.as_str()))
             .cloned()
             .collect()
     }
@@ -41,9 +45,10 @@ impl DataState {
             level1_deps: Vec::new(),
             level2_deps: Vec::new(),
             selected_package: Vec::new(),
-            filter: String::new(),
-            sorting_asc: true,
-            order: OrderBy::Name
+            filter_input: String::new(),
+            is_direct: true,
+            sorting_asc: false,
+            order: OrderBy::Size
         }
     }
 
@@ -55,9 +60,16 @@ impl DataState {
     }
 
     pub fn get_deps(&mut self, parent: &Metadata) -> Vec<Metadata> {
-        parent.dependencies.iter()
-            .map(|id| self.get_metadata(String::from(id)))
-            .collect()
+        let mut res;
+        if self.is_direct {
+            res = parent.dependencies.iter()
+                .map(|id| self.get_metadata(String::from(id)))
+                .collect()    
+        } else {
+            res = self.parse_lock_file(parent.manifest_path.as_str()).unwrap_or(vec![])
+        }
+        sorting_impl(&mut res, self.order, self.sorting_asc);
+        res
     }
 
     pub fn get_metadata(&self, id: String) -> Metadata {
@@ -77,6 +89,50 @@ impl DataState {
         sorting_impl(&mut self.level1_deps, self.order, sorting_asc);
         sorting_impl(&mut self.level2_deps, self.order, sorting_asc);
         self.selected_index = self.get_filter_deps().len() - 1 - self.selected_index;
+    }
+
+    pub fn switch_mode(&mut self) {
+        if let Some(last_dep) = self.selected_package.last() {
+            self.level1_deps = self.get_deps(&last_dep.clone())
+        } else {
+            self.level1_deps = Vec::new();
+        }
+    }
+    
+    fn parse_lock_file(&self, path: &str) -> Result<Vec<Metadata>, error::Errors> {
+        let cargo_lock_path = path.replace("/Cargo.toml", "/Cargo.lock");
+        let path = Path::new(&cargo_lock_path);
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let content = std::fs::read_to_string(&path)?;
+        let mut crates = Vec::new();
+        let mut name = String::new();
+        let mut version = String::new();
+
+        for line in content.lines() {
+            if let Some((key, value)) = line.split_once('=') {
+                let key = key.trim();
+                let value = value
+                    .trim()
+                    .trim_matches(|c: char| c.is_whitespace() || c == '"');
+
+                match key {
+                    "name" => name = value.to_string(),
+                    "version" => version = value.to_string(),
+                    "source" => {
+                        let source = value.to_string();
+                        let id = format!("{}#{}@{}", source, name, version);
+                        if let Some(dep) = self.deps_map.get(id.as_str()) {
+                            crates.push(dep.clone());
+                        } 
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        Ok(crates)
     }
 }
 
