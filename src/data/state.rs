@@ -65,12 +65,13 @@ impl DataState {
     }
 
     pub fn get_deps(&mut self, parent: Metadata) -> Vec<Metadata> {
+        let mut res: Vec<Metadata>;
         if self.is_direct {
-            parent.dependencies.iter()
+            res = parent.dependencies.iter()
                 .map(|id| self.get_metadata(String::from(id)))
                 .collect()
         } else {
-            parent.dependencies.iter()
+            res = parent.dependencies.iter()
                 .flat_map(|id| {
                     let dep = self.get_metadata(String::from(id));
                     let mut deps = self.get_deps(dep.clone());
@@ -79,6 +80,8 @@ impl DataState {
                 })
                 .collect()
         }
+        sorting_impl(&mut res, self.order, self.sorting_asc);
+        res
     }
 
     pub fn get_metadata(&self, id: String) -> Metadata {
