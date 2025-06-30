@@ -28,29 +28,6 @@ struct Args {
 }
 
 fn main() -> error::Result<()> {
-    // Initialize logger
-    let log_file = OpenOptions::new()
-        .create(true)
-        .write(true)
-        .append(true)
-        .open("cargo-dep-viewer.log")
-        .expect("Failed to create log file");
-
-    env_logger::Builder::new()
-        .format(|buf, record| {
-            writeln!(
-                buf,
-                "[{}] [{}] - {}",
-                chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
-                record.level(),
-                record.args()
-            )
-        })
-        .write_style(env_logger::WriteStyle::Always)
-        .target(env_logger::Target::Pipe(Box::new(log_file)))
-        .filter(None, log::LevelFilter::Error)
-        .init();
-
     let args = Args::parse();
     // === Help Notices etc. ===
     if args.license {
@@ -117,7 +94,7 @@ fn main() -> error::Result<()> {
 fn print_license() {
     print!("Rucola is released under the GNU General Public License v3, available at <https://www.gnu.org/licenses/gpl-3.0>.
 
-Copyright (C) 2024 Linus Mußmächer <linus.mussmaecher@gmail.com>
+Copyright (C) 2024 William Fu <williamgeeker@gmail.com>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
