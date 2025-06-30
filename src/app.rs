@@ -61,7 +61,7 @@ impl App {
                             if deps_map.get(id.as_str()).is_some() {
                                 continue;
                             }
-                            
+
                             deps_map.insert(
                                 id.clone(),
                                 Metadata {
@@ -214,7 +214,7 @@ impl App {
                     }
                 };
             }
-           
+
             DisplayMode::Help => {
                 match key.code {
                     KeyCode::Esc | KeyCode::Char('c' | 'C') => {

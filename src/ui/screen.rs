@@ -234,11 +234,11 @@ impl Screen {
 
         let instructions_bot_right = Line::from(vec![
             Span::styled("S", self.styles.hotkey_style),
-            Span::styled("orting──", self.styles.text_style),
+            Span::styled("orting──", self.styles.subtitle_style),
             Span::styled("H", self.styles.hotkey_style),
-            Span::styled("elp──", self.styles.text_style),
+            Span::styled("elp──", self.styles.subtitle_style),
             Span::styled("Q", self.styles.hotkey_style),
-            Span::styled("uit", self.styles.text_style),
+            Span::styled("uit", self.styles.subtitle_style),
         ])
         .right_aligned();
 

@@ -1,6 +1,7 @@
 use crate::ui::OrderBy;
 use std::cmp::Ordering;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use log::error;
 
 #[derive(Debug, Clone, Default)]
 pub struct Metadata {
@@ -63,25 +64,27 @@ impl DataState {
         self.level2_deps = self
             .get_deps(self.get_selected_dep())
     }
-
     pub fn get_deps(&mut self, parent: Metadata) -> Vec<Metadata> {
-        let mut res: Vec<Metadata>;
-        if self.is_direct {
-            res = parent.dependencies.iter()
-                .map(|id| self.get_metadata(String::from(id)))
-                .collect()
-        } else {
-            res = parent.dependencies.iter()
-                .flat_map(|id| {
-                    let dep = self.get_metadata(String::from(id));
-                    let mut deps = self.get_deps(dep.clone());
-                    deps.insert(0, dep);
-                    deps
-                })
-                .collect()
+        let mut dependency_ids = parent.dependencies.clone();
+        if !self.is_direct {
+            dependency_ids = self.get_deps_ids(parent, HashSet::new()).into_iter().collect();
         }
+        let mut res = dependency_ids.iter()
+            .map(|id| self.get_metadata(String::from(id)))
+            .collect();
         sorting_impl(&mut res, self.order, self.sorting_asc);
         res
+    }
+    
+    fn get_deps_ids(&mut self, parent: Metadata, mut visited: HashSet<String>) -> HashSet<String> {
+        for id in parent.dependencies.iter() {
+            if !visited.contains(id) {
+                visited.insert(String::from(id));
+                let target = self.get_metadata(String::from(id));
+                visited = self.get_deps_ids(target, visited.clone());
+            }
+        }
+        visited
     }
 
     pub fn get_metadata(&self, id: String) -> Metadata {
