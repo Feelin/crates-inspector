@@ -62,17 +62,15 @@ impl App {
                                 continue;
                             }
                             
-                            let manifest_path = get_string_from(package, "manifest_path");
                             deps_map.insert(
                                 id.clone(),
                                 Metadata {
-                                    size: get_size_by_manifest_path(manifest_path.clone()).unwrap_or(0),
+                                    size: get_size_by_manifest_path(get_string_from(package, "manifest_path")).unwrap_or(0),
                                     name: trim_value(name),
                                     version: trim_value(version),
                                     license: get_string_from(package, "license"),
                                     documentation: get_string_from(package, "documentation"),
                                     description: get_string_from(package, "description"),
-                                    manifest_path,
                                     dependencies: nodes
                                         .iter()
                                         .find(|node| get_string_from(node, "id") == id)
@@ -103,8 +101,7 @@ impl App {
         res.state.deps_map = deps_map;
         let root = res.state.get_metadata(root_id);
         res.state.selected_package = vec![root.clone()];
-        error!("root: {}", root.dependencies.join(","));
-        res.state.level1_deps = res.state.get_deps(&root);
+        res.state.level1_deps = res.state.get_deps(root);
         res.select_first_row();
         (res, errors)
     }
@@ -144,7 +141,7 @@ impl App {
                             self.state.selected_package.pop();
                             self.state.level2_deps = Vec::new();
                             if let Some(last_dep) = self.state.selected_package.last() {
-                                self.state.level1_deps = self.state.get_deps(&last_dep.clone())
+                                self.state.level1_deps = self.state.get_deps(last_dep.clone())
                             } else {
                                 self.state.level1_deps = Vec::new();
                             }
@@ -155,7 +152,7 @@ impl App {
                         if self.state.level2_deps.len() > 0 {
                             self.screen.viewport_start = 0;
                             self.state.selected_package.push(
-                                self.state.get_filter_deps()[self.state.selected_index].clone(),
+                                self.state.get_selected_dep(),
                             );
                             self.state.level1_deps = self.state.level2_deps.clone();
                             self.state.level2_deps = Vec::new();

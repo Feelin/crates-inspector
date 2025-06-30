@@ -43,8 +43,9 @@ impl Screen {
         res.style_text_area();
         res
     }
-    
+
     pub fn clear_filter(&mut self, state: &mut DataState) {
+        state.selected_index = 0;
         self.filter_area = TextArea::default();
         self.style_text_area();
         state.filter_input = String::from("");
@@ -65,9 +66,9 @@ impl Screen {
 
     fn render_sort(&mut self, area: Rect, buf: &mut Buffer) {
         let contents = vec![
-            ("D", "Sort by default"),
-            ("N", "Sort by name"),
             ("S", "Sort by size"),
+            ("N", "Sort by name"),
+            ("V", "Sort by version"),
             ("R", "Reverse sorting"),
         ];
 
@@ -156,19 +157,21 @@ impl Screen {
             Span::styled("◄", self.styles.hotkey_style),
             Span::styled(": Left──", self.styles.text_style),
             Span::styled("↵", self.styles.hotkey_style),
-            Span::styled(": Open──", self.styles.text_style),
+            Span::styled(": Open doc─", self.styles.text_style),
         ])
         .left_aligned();
 
         let title = Line::from(vec![
-            Span::styled(if state.is_direct{"Direct"} else { "All" }, Style::new().fg(Color::LightRed)),
-            Span::styled(" description of ", self.styles.text_style),
             Span::styled(
+                if state.is_direct { "Direct" } else { "All" },
+                Style::new().fg(Color::LightRed),
+            ),
+            Span::from(" dependencies of "),
+            Span::from(
                 state
                     .selected_package
                     .last()
                     .map_or("".to_string(), |dep| dep.name.to_string()),
-                Style::new().fg(Color::LightRed),
             ),
         ]);
         let total_size = state.get_filter_deps().iter().map(|dep| dep.size).sum();
@@ -240,11 +243,12 @@ impl Screen {
         .right_aligned();
 
         let title = Line::from(vec![
-            Span::styled("Description of ", self.styles.text_style),
             Span::styled(
-                state.get_filter_deps()[state.selected_index].name.clone(),
-                self.styles.title_style,
+                if state.is_direct { "Direct" } else { "All" },
+                Style::new().fg(Color::LightRed),
             ),
+            Span::from(" dependencies of "),
+            Span::from(state.get_selected_dep().name),
         ]);
         let level2_table = Table::new(
             state
@@ -270,6 +274,7 @@ impl Screen {
             ],
         )
         .header(Row::new(vec!["Index", "Name", "Version", "Size"]))
+        .style(self.styles.subtitle_style)
         .block(
             Block::default()
                 .title(title)
@@ -281,20 +286,19 @@ impl Screen {
         Widget::render(level2_table, right_table, buf);
     }
 
-    fn render_description(&mut self, buf: &mut Buffer, state: &DataState, sub_description_area: Rect) {
-        let data = state.get_filter_deps()[state.selected_index].clone();
-
+    fn render_description(
+        &mut self,
+        buf: &mut Buffer,
+        state: &DataState,
+        sub_description_area: Rect,
+    ) {
+        let data = state.get_selected_dep();
         let title = Line::from(vec![
-            Span::styled("Description of ", self.styles.text_style),
-            Span::styled(
-                state.get_filter_deps()[state.selected_index]
-                    .name
-                    .to_string(),
-                self.styles.title_style,
-            ),
+            Span::from("Description of "),
+            Span::from(state.get_selected_dep().name),
         ]);
         let sub_description_text = Paragraph::new(data.description)
-            .style(Style::default().fg(Color::Yellow))
+            .style(self.styles.subtitle_style)
             .block(Block::default().borders(Borders::ALL).title(title));
         Widget::render(sub_description_text, sub_description_area, buf);
     }
@@ -304,11 +308,11 @@ impl Screen {
 
         let help_rows = [
             Row::new(vec![
-                Cell::from("/ or F").style(self.styles.subtitle_style),
+                Cell::from("/ or F").style(self.styles.help_style),
                 Cell::from("Enter the filter text box.").style(self.styles.text_style),
             ]),
             Row::new(vec![
-                Cell::from("⏎ or Esc").style(self.styles.subtitle_style),
+                Cell::from("⏎ or Esc").style(self.styles.help_style),
                 Cell::from("Exit the filter text box").style(self.styles.text_style),
             ]),
         ];
@@ -317,7 +321,7 @@ impl Screen {
             Block::bordered()
                 .title(style::Styled::set_style(
                     "Filter Syntax",
-                    self.styles.title_style,
+                    self.styles.help_style,
                 ))
                 .title_bottom(
                     Line::from(vec![
@@ -372,6 +376,7 @@ impl Screen {
     }
 
     pub fn filter(&mut self, state: &mut DataState) {
+        state.selected_index = 0;
         let default = String::from("");
         state.filter_input = self
             .filter_area
@@ -401,7 +406,7 @@ impl Screen {
             let stats_rows = [
                 Row::new(vec![
                     Cell::from("Crate:").style(self.styles.text_style),
-                    Cell::from(format!("{:5}", current_crate.name)).style(self.styles.text_style),
+                    Cell::from(format!("{:5}", current_crate.name)).style(self.styles.title_style),
                     Cell::from("Version:").style(self.styles.text_style),
                     Cell::from(format!("v{:5}", current_crate.version))
                         .style(self.styles.text_style),

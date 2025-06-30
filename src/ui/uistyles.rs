@@ -20,24 +20,28 @@ pub struct UiStyles {
     pub link_style: Style,
     pub bar_chart_style: Style,
     pub unselected_style: Style,
+    pub help_style: Style,
 }
 
 impl Default for UiStyles {
     fn default() -> Self {
         Self {
             title_style: Style::new()
-                .fg(ratatui::style::Color::LightBlue)
+                .fg(Color::LightBlue)
                 .add_modifier(Modifier::BOLD),
             subtitle_style: Style::new()
-                .fg(ratatui::style::Color::LightBlue)
+                .fg(Color::LightGreen)
+                .add_modifier(Modifier::ITALIC),
+            help_style: Style::new()
+                .fg(Color::LightYellow)
                 .add_modifier(Modifier::ITALIC),
             hotkey_style: Style::new()
-                .fg(ratatui::style::Color::Cyan)
+                .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
             text_style: Style::new().fg(Color::White),
             link_style: Style::new().fg(Color::Cyan),
             selected_style: Style::new()
-                .bg(ratatui::style::Color::LightBlue)
+                .bg(Color::LightBlue)
                 .add_modifier(Modifier::BOLD),
             unselected_style: Style::default(),
             input_style: Style::new().add_modifier(Modifier::ITALIC),
