@@ -11,8 +11,6 @@ use ratatui::{
     prelude::CrosstermBackend,
     Terminal,
 };
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::panic;
 
 use crate::app::App;

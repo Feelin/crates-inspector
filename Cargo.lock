@@ -74,20 +74,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-dep-viewer"
-version = "0.1.0"
-dependencies = [
- "clap",
- "log",
- "open",
- "ratatui",
- "serde",
- "serde_json",
- "thiserror",
- "tui-textarea",
-]
-
-[[package]]
 name = "cassowary"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -167,6 +153,20 @@ dependencies = [
  "ryu",
  "serde",
  "static_assertions",
+]
+
+[[package]]
+name = "crates-inspector"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "log",
+ "open",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tui-textarea",
 ]
 
 [[package]]
