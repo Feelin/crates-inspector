@@ -1,7 +1,7 @@
 use crate::ui::OrderBy;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
-use log::error;
+// use log::error;
 
 #[derive(Debug, Clone, Default)]
 pub struct Metadata {

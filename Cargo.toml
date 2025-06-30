@@ -2,6 +2,14 @@
 name = "crates-inspector"
 version = "0.1.0"
 edition = "2024"
+authors = ["williamgeeker@gmail.com"]
+description = "Terminal tool for crates dependencies manager."
+readme = "README.md"
+homepage = ""
+repository = ""
+keywords = ["crates", "inspector", "terminal", "dependencies", "metadata"]
+categories = ["command-line-interface"]
+license = "GPL-3.0-only"
 
 [dependencies]
 log = "0.4"
