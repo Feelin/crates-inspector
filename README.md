@@ -11,11 +11,12 @@ A command-line tool for managing Rust package dependencies directly in your term
 - **Dependency Listing**:
   - List all dependencies in your project
   - Show only direct dependencies
-- **Flexible Sorting**:
+- **Sorting**:
   - Order by package name (alphabetical)
   - Order by dependency size
-- **Powerful Filtering**:
-  - Filter dependencies by name (supports partial matching)
+  - Order by dependency version
+- **Filtering**:
+  - Filter dependencies by name 
 - **Project Statistics**:
   - Count total dependencies
   - Calculate combined size of dependencies
@@ -29,7 +30,8 @@ A command-line tool for managing Rust package dependencies directly in your term
 cargo install crates-inspector
 ```
 ## Screenshot 📸
-![image](https://github.com/user-attachments/assets/1c4e3584-b80c-4a86-a69b-5014ac557a58)
+![image](https://github.com/user-attachments/assets/24b23d18-6a7f-41dc-995b-f402f6dc418c)
+
 
 
 
