@@ -393,7 +393,7 @@ impl Screen {
             Constraint::Length(20),
             Constraint::Min(40),
         ];
-
+        let total_size: u64 = state.get_filter_deps().iter().map(|dep| dep.size).sum();
         let paths: Vec<String> = state
             .selected_package
             .iter()
@@ -420,16 +420,22 @@ impl Screen {
                         .style(self.styles.text_style),
                 ]),
                 Row::new(vec![
-                    Cell::from("Dependencies count:").style(self.styles.text_style),
+                    Cell::from("Total count:").style(self.styles.text_style),
                     Cell::from(format!("{:5}", state.get_filter_deps().len()))
                         .style(self.styles.text_style),
-                    Cell::from("Path:").style(self.styles.text_style),
-                    Cell::from(joined_path).style(self.styles.text_style),
+                    Cell::from("Total size:").style(self.styles.text_style),
+                    Cell::from(format!("{:5}", get_size(total_size)))
+                        .style(self.styles.text_style)
                 ]),
             ];
             return Table::new(stats_rows, stats_widths)
                 .column_spacing(1)
-                .block(Block::default().title("Statistics").borders(Borders::ALL));
+                .block(Block::default().title(
+                    Line::from(vec![
+                        Span::styled("Statistics at ", self.styles.text_style),
+                        Span::styled(joined_path, self.styles.title_style),
+                    ])
+                ).borders(Borders::ALL));
         }
 
         Table::new([Row::new([Cell::from("Error")])], stats_widths)

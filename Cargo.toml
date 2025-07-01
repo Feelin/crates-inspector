@@ -1,13 +1,13 @@
 [package]
 name = "crates-inspector"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["williamgeeker@gmail.com"]
 description = "Terminal tool for crates dependencies manager."
 readme = "README.md"
 homepage = "https://crates.io/crates/crates-inspector"
 repository = "https://github.com/Feelin/crates-inspector"
-keywords = ["crates", "inspector", "terminal", "dependencies", "metadata"]
+keywords = ["crates", "inspector", "terminal", "dependencies", "package"]
 categories = ["command-line-interface"]
 license = "GPL-3.0-only"
 
