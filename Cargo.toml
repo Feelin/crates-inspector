@@ -1,6 +1,6 @@
 [package]
 name = "crates-inspector"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 authors = ["williamgeeker@gmail.com"]
 description = "Terminal tool for crates dependencies manager."

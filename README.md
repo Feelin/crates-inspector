@@ -30,7 +30,7 @@ A command-line tool for managing Rust package dependencies directly in your term
 cargo install crates-inspector
 ```
 ## Screenshot 📸
-![image](https://github.com/user-attachments/assets/24b23d18-6a7f-41dc-995b-f402f6dc418c)
+![image](https://github.com/user-attachments/assets/44eba676-b976-456b-8d65-a9a0c8df40e5)
 
 
 

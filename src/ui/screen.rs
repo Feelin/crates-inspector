@@ -421,7 +421,7 @@ impl Screen {
                 ]),
                 Row::new(vec![
                     Cell::from("Total count:").style(self.styles.text_style),
-                    Cell::from(format!("{:5}", state.get_filter_deps().len()))
+                    Cell::from(format!("{:5}", state.get_filter_deps().len().to_string()))
                         .style(self.styles.text_style),
                     Cell::from("Total size:").style(self.styles.text_style),
                     Cell::from(format!("{:5}", get_size(total_size)))

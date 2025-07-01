@@ -37,7 +37,7 @@ impl DataState {
     
     pub fn get_selected_dep(&self) -> Metadata {
         let filtered_deps = self.get_filter_deps();
-        if filtered_deps.len() >= self.selected_index {
+        if filtered_deps.len() > self.selected_index {
             filtered_deps[self.selected_index].clone()
         } else { 
             Metadata::default()

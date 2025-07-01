@@ -12,6 +12,8 @@ pub enum Errors {
     RunCargoMetadata,
     #[error("Failed to parse metadata.")]
     ParseMetadata,
+    #[error("Cargo.toml not found.")]
+    CargoTomlNotFound,
 }
 
 impl Errors {

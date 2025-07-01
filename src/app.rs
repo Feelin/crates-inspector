@@ -7,6 +7,7 @@ use ratatui::crossterm::event::{KeyCode, KeyEvent};
 use ratatui::prelude::*;
 use serde_json::Value;
 use std::collections::HashMap;
+use crate::error::Errors::CargoTomlNotFound;
 
 pub struct App {
     state: DataState,
@@ -26,7 +27,12 @@ impl App {
     ) -> (Self, Vec<error::Errors>) {
         let mut errors = Vec::new();
         errors.extend(loading_screen_callback("Loading...").err());
-
+        // if Cargo.toml is not found, show error
+        if !std::path::Path::new(path).join("Cargo.toml").exists() {
+            errors.push(CargoTomlNotFound);
+            return (App::default(), errors)
+        }
+        
         let output = std::process::Command::new("cargo")
             .arg("metadata")
             .arg("--format-version")

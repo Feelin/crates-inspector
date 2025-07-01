@@ -64,14 +64,14 @@ fn main() -> error::Result<()> {
     let mut terminal = init_terminal()?;
     let (mut app, errors) = App::new(&args.path, |message| draw_loading_screen(&mut terminal, message));
     let mut current_error: Option<error::Errors> = errors.into_iter().next_back();
-
+    
     loop {
         terminal.draw(|frame: &mut Frame| {
             let area = frame.area();
             let buf = frame.buffer_mut();
 
             // Make sure area is large enough or show error
-            if area.width < 90 || area.height < 25 {
+            if area.width < 120 || area.height < 25 {
                 // area too small and no error -> show area error
                 current_error = Some(error::Errors::SmallArea);
             }
