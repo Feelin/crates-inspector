@@ -267,13 +267,12 @@ impl Screen {
                 })
                 .collect::<Vec<_>>(),
             vec![
-                Constraint::Percentage(15),
+                Constraint::Percentage(40),
                 Constraint::Percentage(30),
-                Constraint::Percentage(25),
                 Constraint::Percentage(30),
             ],
         )
-        .header(Row::new(vec!["Index", "Name", "Version", "Size"]))
+        .header(Row::new(vec!["Name", "Version", "Size"]))
         .style(self.styles.subtitle_style)
         .block(
             Block::default()
