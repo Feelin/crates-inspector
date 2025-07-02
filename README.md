@@ -4,8 +4,11 @@ A command-line tool for managing Rust package dependencies directly in your term
 
 [![crates.io](https://img.shields.io/crates/v/crates-inspector)](https://crates.io/crates/crates-inspector)
 ![crates.io](https://img.shields.io/crates/d/crates-inspector)
-[![Rust](https://img.shields.io/badge/Rust-1.60+-blue.svg)](https://www.rust-lang.org)
+[![dependency status](https://deps.rs/repo/github/Feelin/crates-inspector/status.svg)](https://deps.rs/repo/github/Feelin/crates-inspector)
+[![Minimum Stable Rust Version](https://img.shields.io/badge/Rust-1.81.0-blue?color=fc8d62&logo=rust)](https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1810-2024-09-05)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue.svg)](https://spdx.org/licenses/GPL-3.0-only.html)
+
+
 
 ## Features ✨
 
