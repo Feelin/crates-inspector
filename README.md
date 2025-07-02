@@ -3,8 +3,9 @@
 A command-line tool for managing Rust package dependencies directly in your terminal.
 
 [![crates.io](https://img.shields.io/crates/v/crates-inspector)](https://crates.io/crates/crates-inspector)
-[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue.svg)](https://spdx.org/licenses/GPL-3.0-only.html)
+![crates.io](https://img.shields.io/crates/d/crates-inspector)
 [![Rust](https://img.shields.io/badge/Rust-1.60+-blue.svg)](https://www.rust-lang.org)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue.svg)](https://spdx.org/licenses/GPL-3.0-only.html)
 
 ## Features ✨
 
@@ -44,7 +45,7 @@ crates-inspector -p "$RUST_PROJECT_PATH"
 ## Support Me
 If you like this project, you can support me in the following ways:
 
-- ⭐️ Give this project a Star
+- [⭐️ Give this project a Star](https://github.com/Feelin/crates-inspector)
 - Share with your friends
 
 
