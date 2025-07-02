@@ -29,8 +29,14 @@ A command-line tool for managing Rust package dependencies directly in your term
 ```bash
 cargo install crates-inspector
 ```
+
+## Quick Start 🚀
+```bash
+crates-inspector -p "$RUST_PROJECT_PATH"
+```
+
 ## Screenshot 📸
-![image](https://github-production-user-asset-6210df.s3.amazonaws.com/7391773/460939230-39b4174e-aa37-45b4-983d-d12aed981c33.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250701%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250701T075937Z&X-Amz-Expires=300&X-Amz-Signature=ce748ecfb832bae0780694cd26d6d0aca4a7a5f95654d45cd5ea34c53c50d7c4&X-Amz-SignedHeaders=host)
+![image](https://github-production-user-asset-6210df.s3.amazonaws.com/7391773/461323340-7452d66b-a0cd-495f-a13a-71e471fdf646.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250702%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250702T024223Z&X-Amz-Expires=300&X-Amz-Signature=4b2cfe6031998d42c51d4a2c460ed8d2b0e43b620616b9c14817166f7c77627a&X-Amz-SignedHeaders=host)
 
 
 ## Support Me
