@@ -49,7 +49,7 @@ You need the Rust toolchain installed on your system to build `lstr`.
   
 ## Usage
 
-## Examples
+### Examples
 
 **1. List the dependencies of the current directory**
 
