@@ -33,6 +33,10 @@ cargo install crates-inspector
 ![image](https://github-production-user-asset-6210df.s3.amazonaws.com/7391773/460939230-39b4174e-aa37-45b4-983d-d12aed981c33.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20250701%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250701T075937Z&X-Amz-Expires=300&X-Amz-Signature=ce748ecfb832bae0780694cd26d6d0aca4a7a5f95654d45cd5ea34c53c50d7c4&X-Amz-SignedHeaders=host)
 
 
+## Support Me
+If you like this project, you can support me in the following ways:
 
+- ⭐️ Give this project a Star
+- Share with your friends
 
 
