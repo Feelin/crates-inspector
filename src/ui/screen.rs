@@ -259,7 +259,6 @@ impl Screen {
                 .take(visible_rows as usize)
                 .map(|(index, dep)| {
                     Row::new(vec![
-                        Cell::from((index + 1).to_string()),
                         Cell::from(dep.name.clone()),
                         Cell::from(dep.version.clone()),
                         Cell::from(get_size(dep.size)),
