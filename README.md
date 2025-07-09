@@ -35,7 +35,7 @@ cargo install crates-inspector
 ```
 ### From source (all platforms)
 
-You need the Rust toolchain installed on your system to build `lstr`.
+You need the Rust toolchain installed on your system to build `crates-inspector`.
 
 1.  **Clone the repository:**
     ```bash
