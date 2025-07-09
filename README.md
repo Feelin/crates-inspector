@@ -6,7 +6,8 @@ A command-line tool for managing Rust package dependencies directly in your term
 ![crates.io](https://img.shields.io/crates/d/crates-inspector)
 [![dependency status](https://deps.rs/repo/github/Feelin/crates-inspector/status.svg)](https://deps.rs/repo/github/Feelin/crates-inspector)
 [![Minimum Stable Rust Version](https://img.shields.io/badge/Rust-1.81.0-blue?color=fc8d62&logo=rust)](https://github.com/rust-lang/rust/blob/master/RELEASES.md#version-1810-2024-09-05)
-[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue.svg)](https://spdx.org/licenses/GPL-3.0-only.html)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue.svg)](https://spdx.org/licenses/GPL-3.0-only.html)[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FFeelin%2Fcrates-inspector.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FFeelin%2Fcrates-inspector?ref=badge_shield)
+
 
 
 
@@ -92,3 +93,7 @@ If you like this project, you can support me in the following ways:
 - Share with your friends
 
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FFeelin%2Fcrates-inspector.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FFeelin%2Fcrates-inspector?ref=badge_large)
