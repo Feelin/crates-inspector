@@ -5,7 +5,7 @@ mod error;
 
 use clap::Parser;
 use log::error;
-use ratatui::crossterm::{event::{self, Event, KeyCode}, terminal, ExecutableCommand};
+use ratatui::crossterm::{event::{self, Event, KeyCode, KeyEventKind}, terminal, ExecutableCommand};
 use ratatui::prelude::*;
 use ratatui::{
     prelude::CrosstermBackend,
@@ -100,9 +100,11 @@ fn main() -> error::Result<()> {
         })?;
 
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q'|'Q') => break,
-                _ => app.update(key)
+            if key.kind == KeyEventKind::Press {
+                match key.code {
+                    KeyCode::Char('q'|'Q') => break,
+                    _ => app.update(key)
+                }
             }
         }
     }
